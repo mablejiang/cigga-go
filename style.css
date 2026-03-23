@@ -138,7 +138,8 @@ body::after {
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.95);
+  transition: transform 80ms ease-out;
 }
 
 .btn--menu {
@@ -967,4 +968,357 @@ body::after {
   .card { width: 125px; min-width: 125px; height: 176px; }
   .card--large { width: 165px !important; min-width: 165px !important; height: 232px !important; }
   .screen { max-width: 640px; }
+}
+
+/* ─── Screen Transitions ──────────────────────────────────────────────── */
+
+.screen--entering { animation: fadeSlideIn 300ms ease-out forwards; }
+.screen--exiting { animation: fadeSlideOut 200ms ease-in forwards; }
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ─── Card Entrance Animation ─────────────────────────────────────────── */
+
+.card--entering {
+  animation: cardEnter 300ms ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Card Fly Animation ──────────────────────────────────────────────── */
+
+.card--flying {
+  position: fixed;
+  z-index: 1000;
+  transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+/* ─── Toast Notifications ─────────────────────────────────────────────── */
+
+.toast-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-en);
+  letter-spacing: 0.03em;
+  animation: toastIn 300ms ease-out forwards;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.toast--exiting {
+  animation: toastOut 300ms ease-in forwards;
+}
+
+.toast--combo {
+  background: var(--gold-dim);
+  color: var(--gold);
+  border: 1px solid var(--gold-border);
+}
+
+.toast--warning {
+  background: var(--cinnabar-dim);
+  color: var(--cinnabar);
+  border: 1px solid rgba(192,57,43,0.3);
+}
+
+.toast--info {
+  background: var(--ink-2);
+  color: var(--ash-muted);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.toast--celebration {
+  background: linear-gradient(135deg, var(--gold-dim), rgba(200,165,92,0.25));
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  font-size: 16px;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-12px); }
+}
+
+/* ─── Scoring Combo Reveal ────────────────────────────────────────────── */
+
+.combo-item--entering {
+  animation: comboSlideIn 400ms ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes comboSlideIn {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.scoring__base--entering {
+  animation: fadeSlideIn 300ms ease-out forwards;
+  opacity: 0;
+}
+
+.scoring__total--entering {
+  animation: fadeSlideIn 300ms ease-out forwards;
+  opacity: 0;
+}
+
+/* ─── Screen Shake ────────────────────────────────────────────────────── */
+
+.screen--shake {
+  animation: screenShake 300ms ease-out;
+}
+
+@keyframes screenShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+/* ─── Counterfeit Flip Reveal ─────────────────────────────────────────── */
+
+.card--counterfeit-hidden {
+  perspective: 600px;
+}
+
+.card--counterfeit-flip {
+  animation: counterfeitFlip 600ms ease-out forwards;
+  transform-style: preserve-3d;
+}
+
+@keyframes counterfeitFlip {
+  0%   { transform: rotateY(0deg); }
+  50%  { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
+}
+
+/* ─── Grand Slam Celebration ──────────────────────────────────────────── */
+
+.grandslam-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle, rgba(200,165,92,0.3), rgba(200,165,92,0.05));
+  z-index: 3000;
+  animation: grandFlash 600ms ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes grandFlash {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.grandslam-text {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.3);
+  font-family: var(--font-cn);
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 2px 20px rgba(200,165,92,0.5);
+  z-index: 3001;
+  animation: grandTextIn 1.5s ease-out forwards;
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 4px;
+}
+
+@keyframes grandTextIn {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+  20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  35%  { transform: translate(-50%, -50%) scale(1.0); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.0); }
+}
+
+/* Grand slam sparkle particles */
+.grandslam-particles {
+  position: fixed;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  z-index: 3000;
+  pointer-events: none;
+}
+
+.grandslam-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: particleFly 1.2s ease-out forwards;
+}
+
+@keyframes particleFly {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: var(--particle-end) scale(0); }
+}
+
+/* Grand slam combo line pulse */
+.combo--grandslam-active {
+  animation: grandslam-glow 2s ease-in-out infinite, grandPulse 600ms ease-out;
+}
+
+@keyframes grandPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+/* ─── Final Choice Animations ─────────────────────────────────────────── */
+
+.card--float-left {
+  animation: floatFromLeft 500ms ease-out forwards, cardFloat 3s ease-in-out infinite 500ms;
+}
+
+.card--float-right {
+  animation: floatFromRight 500ms ease-out forwards, cardFloat 3s ease-in-out infinite 500ms;
+}
+
+@keyframes floatFromLeft {
+  from { opacity: 0; transform: translateX(-60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes floatFromRight {
+  from { opacity: 0; transform: translateX(60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+.card--chosen {
+  animation: cardChosen 400ms ease-out forwards;
+}
+
+.card--rejected {
+  animation: cardRejected 400ms ease-out forwards;
+}
+
+@keyframes cardChosen {
+  from { transform: scale(1); }
+  to   { transform: scale(1.05); }
+}
+
+@keyframes cardRejected {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0.2; transform: scale(0.9); }
+}
+
+/* ─── Button Feedback ─────────────────────────────────────────────────── */
+
+.btn--confirm:not(.btn--disabled) {
+  animation: btnPulse 2s ease-in-out infinite;
+}
+
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232,228,223,0); }
+  50%      { box-shadow: 0 0 0 4px rgba(232,228,223,0.15); }
+}
+
+/* ─── Card Hover Tooltip (desktop only) ───────────────────────────────── */
+
+@media (hover: hover) {
+  .card-tooltip-wrapper {
+    position: relative;
+  }
+
+  .card-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink-2);
+    border: 1px solid var(--gold-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    min-width: 180px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 150ms ease;
+    z-index: 100;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .card-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--gold-border);
+  }
+
+  .card-tooltip--visible {
+    opacity: 1;
+  }
+
+  .card-tooltip__name {
+    font-family: var(--font-cn);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ash);
+    margin-bottom: 4px;
+  }
+
+  .card-tooltip__row {
+    display: flex;
+    justify-content: space-between;
+    color: var(--ash-muted);
+  }
+
+  .card-tooltip__label {
+    opacity: 0.6;
+  }
+
+  .card-tooltip__value {
+    color: var(--ash);
+    font-weight: 500;
+  }
+
+  .card-tooltip__stars {
+    color: var(--gold);
+    letter-spacing: -1px;
+  }
 }

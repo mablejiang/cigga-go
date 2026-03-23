@@ -603,6 +603,47 @@ function confirmPick() {
   if (state.selectedCardIndex < 0) return;
   const humanIdx = state.selectedCardIndex;
 
+  // Get the selected card element and kept area for fly animation
+  const handArea = document.getElementById('hand-area');
+  const keptArea = document.getElementById('kept-area');
+  const selectedEl = handArea ? handArea.children[humanIdx] : null;
+
+  if (selectedEl && keptArea) {
+    const cardRect = selectedEl.getBoundingClientRect();
+    const keptRect = keptArea.getBoundingClientRect();
+
+    // Create flying clone
+    const clone = selectedEl.cloneNode(true);
+    clone.className = 'card card--flying';
+    clone.style.left = cardRect.left + 'px';
+    clone.style.top = cardRect.top + 'px';
+    clone.style.width = cardRect.width + 'px';
+    clone.style.height = cardRect.height + 'px';
+    document.body.appendChild(clone);
+
+    // Target position: center of kept area
+    const targetX = keptRect.left + keptRect.width / 2 - cardRect.width / 2;
+    const targetY = keptRect.top + keptRect.height / 2 - cardRect.height / 2;
+
+    // Trigger fly
+    requestAnimationFrame(() => {
+      clone.style.left = targetX + 'px';
+      clone.style.top = targetY + 'px';
+      clone.style.transform = 'scale(0.6)';
+      clone.style.opacity = '0.7';
+    });
+
+    // Remove clone after animation and proceed
+    setTimeout(() => {
+      clone.remove();
+      _doConfirmPick(humanIdx);
+    }, 400);
+  } else {
+    _doConfirmPick(humanIdx);
+  }
+}
+
+function _doConfirmPick(humanIdx) {
   // Human picks
   const humanChosen = state.hands[0].splice(humanIdx, 1)[0];
   const humanHasItem = state.kept[0].some(c => c.type === 'item');
@@ -830,7 +871,7 @@ function renderPicking() {
     aiBar.appendChild(aiDiv);
   }
 
-  // Hand
+  // Hand — with staggered entrance animation
   const handArea = document.getElementById('hand-area');
   for (let i = 0; i < state.hands[0].length; i++) {
     const card = state.hands[0][i];
@@ -842,13 +883,20 @@ function renderPicking() {
       index: i,
     });
     if (isDisabledItem) cardEl.classList.add('card--disabled');
+    // Stagger card entrance
+    cardEl.classList.add('card--entering');
+    cardEl.style.animationDelay = `${i * 60}ms`;
+    // Tooltip on hover
+    setupCardTooltip(cardEl, card);
     handArea.appendChild(cardEl);
   }
 
   // Kept
   const keptArea = document.getElementById('kept-area');
   for (const card of state.kept[0]) {
-    keptArea.appendChild(renderCard(card, { small: true }));
+    const keptEl = renderCard(card, { small: true });
+    setupCardTooltip(keptEl, card);
+    keptArea.appendChild(keptEl);
   }
 
   // Confirm button
@@ -870,11 +918,34 @@ function renderFinalTwo() {
     </div>
   `;
   const container = document.getElementById('final-cards');
+  let finalClickUsed = false;
   for (let i = 0; i < 2 && i < state.hands[0].length; i++) {
     const card = state.hands[0][i];
-    const cardEl = renderCard(card, { clickable: true, index: i });
-    cardEl.classList.add('card--large');
-    cardEl.addEventListener('click', () => confirmFinalChoice(i));
+    const cardEl = renderCard(card, { clickable: false });
+    cardEl.classList.add('card--large', 'card--clickable');
+    // Entrance from opposite sides + float
+    cardEl.classList.add(i === 0 ? 'card--float-left' : 'card--float-right');
+    // Tooltip
+    setupCardTooltip(cardEl, card);
+
+    cardEl.addEventListener('click', () => {
+      if (finalClickUsed) return;
+      finalClickUsed = true;
+      // Animate chosen/rejected before transitioning
+      const cards = container.children;
+      for (let j = 0; j < cards.length; j++) {
+        // Remove float animations to avoid conflict
+        cards[j].style.animation = 'none';
+        cards[j].classList.remove('card--clickable');
+        if (j === i) {
+          cards[j].classList.add('card--chosen');
+        } else {
+          cards[j].classList.add('card--rejected');
+        }
+      }
+      // Delay before transitioning to scoring
+      setTimeout(() => confirmFinalChoice(i), 600);
+    });
     container.appendChild(cardEl);
   }
 }
@@ -884,37 +955,38 @@ function renderScoring() {
   const result = state.comboResults[0];
   const humanCards = state.kept[0];
 
-  let comboHtml = '';
+  // Build combo items as data for staggered reveal
+  const comboItems = [];
 
   // Brand combos
   for (const [brand, type] of Object.entries(result.brandCombos)) {
     const label = type === 'three' ? t().three : t().pair;
     const val = type === 'three' ? COMBO_VALUES.three : COMBO_VALUES.pair;
-    comboHtml += `<div class="combo-item combo--brand"><span class="combo-label">${brand} ${label}</span><span class="combo-value">+${val}</span></div>`;
+    comboItems.push({ html: `<div class="combo-item combo--brand combo-item--entering"><span class="combo-label">${brand} ${label}</span><span class="combo-value">+${val}</span></div>`, toastMsg: `${brand} ${label}! +${val}`, toastType: 'combo' });
   }
   // Origin combos
   for (const [origin, type] of Object.entries(result.originCombos)) {
     const label = type === 'old_friends' ? t().oldFriends : t().hometown;
     const val = type === 'old_friends' ? COMBO_VALUES.old_friends : COMBO_VALUES.hometown;
-    comboHtml += `<div class="combo-item combo--origin"><span class="combo-label">${localOrigin(origin)} ${label}</span><span class="combo-value">+${val}</span></div>`;
+    comboItems.push({ html: `<div class="combo-item combo--origin combo-item--entering"><span class="combo-label">${localOrigin(origin)} ${label}</span><span class="combo-value">+${val}</span></div>`, toastMsg: `${localOrigin(origin)} ${label}! +${val}`, toastType: 'combo' });
   }
   if (result.formatClash) {
-    comboHtml += `<div class="combo-item combo--format"><span class="combo-label">${t().formatClash}</span><span class="combo-value">+${COMBO_VALUES.format_clash}</span></div>`;
+    comboItems.push({ html: `<div class="combo-item combo--format combo-item--entering"><span class="combo-label">${t().formatClash}</span><span class="combo-value">+${COMBO_VALUES.format_clash}</span></div>`, toastMsg: `${t().formatClash}! +${COMBO_VALUES.format_clash}`, toastType: 'combo' });
   }
   if (result.mixedBag) {
-    comboHtml += `<div class="combo-item combo--mixed"><span class="combo-label">${t().mixedBag}</span><span class="combo-value">+${COMBO_VALUES.mixed_bag}</span></div>`;
+    comboItems.push({ html: `<div class="combo-item combo--mixed combo-item--entering"><span class="combo-label">${t().mixedBag}</span><span class="combo-value">+${COMBO_VALUES.mixed_bag}</span></div>`, toastMsg: `${t().mixedBag}! +${COMBO_VALUES.mixed_bag}`, toastType: 'combo' });
   }
   if (result.grandSlam) {
-    comboHtml += `<div class="combo-item combo--grandslam"><span class="combo-label">🎯 ${t().grandSlam}!</span><span class="combo-value">×2</span></div>`;
+    comboItems.push({ html: `<div class="combo-item combo--grandslam combo--grandslam-active combo-item--entering"><span class="combo-label">${t().grandSlam}!</span><span class="combo-value">×2</span></div>`, isGrandSlam: true });
   }
   if (result.itemEffect) {
     const itemCard = humanCards.find(c => c.type === 'item');
     const itemName = itemCard ? cardName(itemCard) : t().item;
     const sign = result.itemBonus >= 0 ? '+' : '';
-    comboHtml += `<div class="combo-item combo--item"><span class="combo-label">🎴 ${itemName}</span><span class="combo-value">${sign}${result.itemBonus}</span></div>`;
+    comboItems.push({ html: `<div class="combo-item combo--item combo-item--entering"><span class="combo-label">${itemName}</span><span class="combo-value">${sign}${result.itemBonus}</span></div>`, toastMsg: `${itemName}: ${sign}${result.itemBonus}`, toastType: 'info' });
   }
   if (result.counterfeitPenalty > 0) {
-    comboHtml += `<div class="combo-item combo--fake"><span class="combo-label">❌ ${t().counterfeitAlert}</span><span class="combo-value">-${result.counterfeitPenalty}</span></div>`;
+    comboItems.push({ html: `<div class="combo-item combo--fake combo-item--entering"><span class="combo-label">${t().counterfeitAlert}</span><span class="combo-value">-${result.counterfeitPenalty}</span></div>`, toastMsg: `${t().counterfeitAlert} -${result.counterfeitPenalty}`, toastType: 'warning' });
   }
 
   // Leaderboard
@@ -935,10 +1007,10 @@ function renderScoring() {
     <div class="screen screen--scoring">
       <div class="scoring__title">${t().roundScoring(state.round + 1)}</div>
       <div class="scoring__cards" id="scoring-cards"></div>
-      <div class="scoring__breakdown">
-        <div class="scoring__base">${t().base} ${result.baseTotal}</div>
-        ${comboHtml}
-        <div class="scoring__total">${t().roundScore} <strong>${result.total}</strong></div>
+      <div class="scoring__breakdown" id="scoring-breakdown">
+        <div class="scoring__base scoring__base--entering">${t().base} ${result.baseTotal}</div>
+        <div id="combo-reveal-area"></div>
+        <div class="scoring__total scoring__total--entering" id="scoring-total" style="opacity:0">${t().roundScore} <strong id="score-counter">0</strong></div>
       </div>
       <div class="scoring__leaderboard">
         <div class="lb-header"><span class="lb-rank"></span><span class="lb-name">${t().player}</span><span class="lb-round">${t().roundLabel}</span><span class="lb-total">${t().total}</span></div>
@@ -948,14 +1020,58 @@ function renderScoring() {
     </div>
   `;
 
-  // Render player's kept cards with counterfeit reveal
+  // Render player's kept cards — counterfeit starts hidden, reveals later
   const scoringCards = document.getElementById('scoring-cards');
+  const hasCounterfeit = humanCards.some(c => c.type === 'counterfeit');
   for (const card of humanCards) {
-    scoringCards.appendChild(renderCard(card, {
-      small: true,
-      revealed: card.type === 'counterfeit',
-    }));
+    if (card.type === 'counterfeit') {
+      // Render as a normal-looking pack card first (unrevealed)
+      const cardEl = renderCard(card, { small: true, revealed: false });
+      cardEl.classList.add('card--entering');
+      scoringCards.appendChild(cardEl);
+      // Trigger the flip reveal after delay
+      triggerCounterfeitReveal(cardEl, card);
+    } else {
+      const cardEl = renderCard(card, { small: true });
+      cardEl.classList.add('card--entering');
+      setupCardTooltip(cardEl, card);
+      scoringCards.appendChild(cardEl);
+    }
   }
+
+  // Staggered combo reveal
+  const comboArea = document.getElementById('combo-reveal-area');
+  const totalEl = document.getElementById('scoring-total');
+  const counterEl = document.getElementById('score-counter');
+
+  const baseDelay = 500; // after base score fade in
+  comboItems.forEach((item, idx) => {
+    setTimeout(() => {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = item.html;
+      const el = wrapper.firstElementChild;
+      el.style.animationDelay = '0ms';
+      comboArea.appendChild(el);
+
+      // Show toast for combos
+      if (item.toastMsg) {
+        showToast(item.toastMsg, item.toastType || 'combo');
+      }
+
+      // Grand Slam celebration
+      if (item.isGrandSlam) {
+        triggerGrandSlamCelebration();
+      }
+    }, baseDelay + idx * 400);
+  });
+
+  // After all combos revealed, show total with counter animation
+  const totalDelay = baseDelay + comboItems.length * 400 + 200;
+  setTimeout(() => {
+    totalEl.style.opacity = '1';
+    totalEl.classList.add('scoring__total--entering');
+    animateCounter(counterEl, result.total, 800);
+  }, totalDelay);
 
   document.getElementById('next-btn').addEventListener('click', nextRound);
 }
@@ -1105,17 +1221,215 @@ function renderComboReference() {
   });
 }
 
-function renderGame() {
-  switch (state.phase) {
-    case 'MENU': renderMenu(); break;
-    case 'RULES': renderRules(); break;
-    case 'PICKING': renderPicking(); break;
-    case 'FINAL_TWO': renderFinalTwo(); break;
-    case 'SCORING': renderScoring(); break;
-    case 'GAME_OVER': renderGameOver(); break;
-    default: renderMenu();
+// ─── Toast Notification System ──────────────────────────────────────────────
+
+function getToastContainer() {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
   }
-  renderLangToggle();
+  return container;
+}
+
+function showToast(message, type = 'info') {
+  const container = getToastContainer();
+  const toast = document.createElement('div');
+  toast.className = `toast toast--${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('toast--exiting');
+    setTimeout(() => toast.remove(), 300);
+  }, 1500);
+}
+
+// ─── Screen Transition Helper ────────────────────────────────────────────────
+
+let _transitionLock = false;
+
+function transitionTo(renderFn) {
+  if (_transitionLock) { renderFn(); renderLangToggle(); return; }
+  const app = document.getElementById('app');
+  const current = app.firstElementChild;
+
+  if (!current) {
+    renderFn();
+    renderLangToggle();
+    const newScreen = app.firstElementChild;
+    if (newScreen) newScreen.classList.add('screen--entering');
+    return;
+  }
+
+  _transitionLock = true;
+  current.classList.add('screen--exiting');
+
+  setTimeout(() => {
+    renderFn();
+    renderLangToggle();
+    const newScreen = app.firstElementChild;
+    if (newScreen) newScreen.classList.add('screen--entering');
+    _transitionLock = false;
+  }, 200);
+}
+
+// ─── Score Counter Animation ─────────────────────────────────────────────────
+
+function animateCounter(element, target, duration = 800) {
+  const start = performance.now();
+  const initial = 0;
+
+  function tick(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease-out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(initial + (target - initial) * eased);
+    element.textContent = current;
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+}
+
+// ─── Tooltip Helper ──────────────────────────────────────────────────────────
+
+let _tooltipTimer = null;
+let _activeTooltip = null;
+
+function setupCardTooltip(cardEl, card) {
+  // Only on desktop with hover
+  if (!window.matchMedia('(hover: hover)').matches) return;
+  if (card.type === 'item') return;
+
+  cardEl.style.position = 'relative';
+
+  cardEl.addEventListener('mouseenter', () => {
+    _tooltipTimer = setTimeout(() => {
+      if (_activeTooltip) _activeTooltip.remove();
+
+      const tooltip = document.createElement('div');
+      tooltip.className = 'card-tooltip';
+
+      const displayBrand = card.brand || '';
+      const nameEn = card.name_en || '';
+      const nameCn = card.name_cn || card.brand || '';
+      const nameDisplay = nameCn + (nameEn ? ` (${nameEn})` : '');
+
+      tooltip.innerHTML = `
+        <div class="card-tooltip__name">${nameDisplay}</div>
+        <div class="card-tooltip__row"><span class="card-tooltip__label">Origin</span><span class="card-tooltip__value">${card.origin || ''} (${localOrigin(card.origin || '')})</span></div>
+        <div class="card-tooltip__row"><span class="card-tooltip__label">Format</span><span class="card-tooltip__value">${localFormat(card.format || '')}</span></div>
+        <div class="card-tooltip__row"><span class="card-tooltip__label">Rarity</span><span class="card-tooltip__stars">${'★'.repeat(card.rarity || 0)}</span></div>
+        <div class="card-tooltip__row"><span class="card-tooltip__label">Base</span><span class="card-tooltip__value">${card.type === 'counterfeit' ? '-5' : '+' + card.base_score}</span></div>
+        ${card.sku ? `<div class="card-tooltip__row"><span class="card-tooltip__label">SKU</span><span class="card-tooltip__value">${card.sku}</span></div>` : ''}
+      `;
+
+      cardEl.appendChild(tooltip);
+      _activeTooltip = tooltip;
+
+      // Force reflow then show
+      requestAnimationFrame(() => tooltip.classList.add('card-tooltip--visible'));
+    }, 500);
+  });
+
+  cardEl.addEventListener('mouseleave', () => {
+    clearTimeout(_tooltipTimer);
+    if (_activeTooltip) {
+      _activeTooltip.remove();
+      _activeTooltip = null;
+    }
+  });
+}
+
+// ─── Grand Slam Celebration ──────────────────────────────────────────────────
+
+function triggerGrandSlamCelebration() {
+  // Gold flash overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'grandslam-overlay';
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 600);
+
+  // Centered text
+  const text = document.createElement('div');
+  text.className = 'grandslam-text';
+  text.textContent = LANG === 'ZH' ? '大满贯 ×2' : 'GRAND SLAM ×2';
+  document.body.appendChild(text);
+  setTimeout(() => text.remove(), 1500);
+
+  // Particles
+  const particles = document.createElement('div');
+  particles.className = 'grandslam-particles';
+  document.body.appendChild(particles);
+
+  for (let i = 0; i < 16; i++) {
+    const p = document.createElement('div');
+    p.className = 'grandslam-particle';
+    const angle = (i / 16) * Math.PI * 2;
+    const dist = 60 + Math.random() * 80;
+    const x = Math.cos(angle) * dist;
+    const y = Math.sin(angle) * dist;
+    p.style.setProperty('--particle-end', `translate(${x}px, ${y}px)`);
+    p.style.animationDelay = `${i * 30}ms`;
+    particles.appendChild(p);
+  }
+
+  setTimeout(() => particles.remove(), 1500);
+
+  showToast(LANG === 'ZH' ? '大满贯! 总分 ×2!' : 'Grand Slam! Total ×2!', 'celebration');
+}
+
+// ─── Counterfeit Reveal Animation ────────────────────────────────────────────
+
+function triggerCounterfeitReveal(cardEl, card) {
+  // Initially show as normal pack card
+  // After 1s, flip to reveal
+  setTimeout(() => {
+    cardEl.classList.add('card--counterfeit-flip');
+
+    setTimeout(() => {
+      // At the midpoint of flip, swap content to revealed
+      cardEl.className = cardEl.className.replace('card--counterfeit-flip', '');
+      cardEl.classList.add('card--counterfeit-revealed');
+      cardEl.innerHTML = `
+        <div class="card__fake-stamp">${t().fakeStamp}</div>
+        <div class="card__info">
+          <div class="card__brand">${card.brand}</div>
+          <div class="card__meta">${localOrigin(card.origin)} · ${localFormat(card.format)}</div>
+          <div class="card__score score--negative">-5</div>
+        </div>
+      `;
+
+      showToast(LANG === 'ZH' ? '发现假烟! -5' : 'Fake detected! -5', 'warning');
+
+      // Screen shake
+      const app = document.getElementById('app');
+      if (app && app.firstElementChild) {
+        app.firstElementChild.classList.add('screen--shake');
+        setTimeout(() => app.firstElementChild.classList.remove('screen--shake'), 300);
+      }
+    }, 300); // halfway through the 600ms flip
+  }, 1000);
+}
+
+function renderGame() {
+  const renderFn = () => {
+    switch (state.phase) {
+      case 'MENU': renderMenu(); break;
+      case 'RULES': renderRules(); break;
+      case 'PICKING': renderPicking(); break;
+      case 'FINAL_TWO': renderFinalTwo(); break;
+      case 'SCORING': renderScoring(); break;
+      case 'GAME_OVER': renderGameOver(); break;
+      default: renderMenu();
+    }
+  };
+
+  transitionTo(renderFn);
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
