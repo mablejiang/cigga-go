@@ -799,9 +799,10 @@ function renderCard(card, options = {}) {
     div.addEventListener('click', () => {
       state.selectedCardIndex = index;
       // Update selection visually without full re-render
-      const handArea = document.getElementById('hand-area');
-      if (handArea) {
-        handArea.querySelectorAll('.card').forEach((el, i) => {
+      // Walk up to find the parent hand container, then toggle siblings
+      const parent = div.parentElement;
+      if (parent) {
+        parent.querySelectorAll('.card').forEach((el, i) => {
           el.classList.toggle('card--selected', i === index);
         });
         const confirmBtn = document.getElementById('confirm-btn');
