@@ -1,5 +1,157 @@
 // ─── Cigga Go — H5 PvE Game Engine ─────────────────────────────────────────
 
+// ─── i18n System ─────────────────────────────────────────────────────────────
+
+let LANG = localStorage.getItem('cigga_lang') || 'EN';
+
+const I18N = {
+  ZH: {
+    aiNames: ['老王', '小李', '张姐', '赵哥', '阿福', '大刘', '陈叔'],
+    you: '你',
+    passLeft: '← 左传',
+    passRight: '右传 →',
+    round: (n) => `第${n}轮`,
+    picked: (x, y) => `已选 ${x}/${y}`,
+    yourHand: '你的手牌',
+    handHint: '（点击选牌，再点确认）',
+    collected: '已收集',
+    pickThis: '选这张',
+    cards: (n) => `${n}张`,
+    finalChoice: '最后抉择',
+    finalSubtitle: '选一张保留，另一张弃掉',
+    three: '三条',
+    pair: '对子',
+    oldFriends: '老乡见老乡',
+    hometown: '同乡',
+    formatClash: '粗细搭配',
+    mixedBag: '杂货铺',
+    grandSlam: '大满贯',
+    item: '道具',
+    counterfeitAlert: '假烟!',
+    fakeStamp: '假',
+    base: '基础分:',
+    roundScore: '本轮得分:',
+    player: '玩家',
+    roundLabel: '本轮',
+    total: '总分',
+    nextRound: '下一轮',
+    seeResults: '查看结果',
+    youWon: '你赢了!',
+    xWins: (name) => `${name} 获胜!`,
+    congrats: '恭喜你，烟卡大王！',
+    yourTotal: '你的总分:',
+    playAgain: '再来一局',
+    menuTitle: 'Cigga Go',
+    menuSubtitle: '烟卡GO — 轮抽卡牌游戏',
+    menuDesc: '选择人数开始游戏',
+    xPlayers: (n) => `${n} 人`,
+    roundScoring: (n) => `第${n}轮 计分`,
+    formatRegular: '常规',
+    formatSlim: '细支',
+    formatMiddle: '中支',
+  },
+  EN: {
+    aiNames: ['Lao Wang', 'Xiao Li', 'Sister Zhang', 'Brother Zhao', 'Ah Fu', 'Big Liu', 'Uncle Chen'],
+    you: 'You',
+    passLeft: '← Pass Left',
+    passRight: 'Pass Right →',
+    round: (n) => `Round ${n}`,
+    picked: (x, y) => `Picked ${x}/${y}`,
+    yourHand: 'Your Hand',
+    handHint: '(Tap to select, then confirm)',
+    collected: 'Collected',
+    pickThis: 'Pick This',
+    cards: (n) => `${n} cards`,
+    finalChoice: 'Final Choice',
+    finalSubtitle: 'Keep one, discard the other',
+    three: 'Three of a Kind',
+    pair: 'Pair',
+    oldFriends: 'Old Friends',
+    hometown: 'Hometown',
+    formatClash: 'Format Clash',
+    mixedBag: 'Mixed Bag',
+    grandSlam: 'Grand Slam',
+    item: 'Item',
+    counterfeitAlert: 'Counterfeit!',
+    fakeStamp: 'FAKE',
+    base: 'Base:',
+    roundScore: 'Round Score:',
+    player: 'Player',
+    roundLabel: 'Round',
+    total: 'Total',
+    nextRound: 'Next Round',
+    seeResults: 'See Results',
+    youWon: 'You Won!',
+    xWins: (name) => `${name} Wins!`,
+    congrats: 'Congratulations, Card Master!',
+    yourTotal: 'Your total:',
+    playAgain: 'Play Again',
+    menuTitle: 'Cigga Go',
+    menuSubtitle: 'Card Drafting Game',
+    menuDesc: 'Choose number of players',
+    xPlayers: (n) => `${n} Players`,
+    roundScoring: (n) => `Round ${n} Scoring`,
+    formatRegular: 'Regular',
+    formatSlim: 'Slim',
+    formatMiddle: 'Middle',
+  }
+};
+
+const PROVINCE_MAP = {
+  '上海': 'Shanghai', '云南': 'Yunnan', '湖北': 'Hubei', '湖南': 'Hunan',
+  '浙江': 'Zhejiang', '江苏': 'Jiangsu', '四川': 'Sichuan', '福建': 'Fujian',
+  '河南': 'Henan', '山东': 'Shandong', '广东': 'Guangdong', '贵州': 'Guizhou',
+  '江西': 'Jiangxi', '内蒙古': 'Inner Mongolia', '安徽': 'Anhui', '北京': 'Beijing',
+  '甘肃': 'Gansu', '重庆': 'Chongqing', '辽宁': 'Liaoning', '吉林': 'Jilin',
+  '河北': 'Hebei', '广西': 'Guangxi', '黑龙江': 'Heilongjiang', '陕西': 'Shaanxi',
+};
+
+const FORMAT_MAP = {
+  '常规': 'Regular',
+  '细支': 'Slim',
+  '中支': 'Middle',
+};
+
+function t() { return I18N[LANG]; }
+
+function setLang(lang) {
+  LANG = lang;
+  localStorage.setItem('cigga_lang', lang);
+  renderGame();
+}
+
+function localOrigin(origin) {
+  return LANG === 'EN' ? (PROVINCE_MAP[origin] || origin) : origin;
+}
+
+function localFormat(format) {
+  return LANG === 'EN' ? (FORMAT_MAP[format] || format) : format;
+}
+
+function cardName(card) {
+  if (LANG === 'EN' && card.name_en) return card.name_en;
+  return card.name_cn || card.brand;
+}
+
+function cardEffect(card) {
+  if (LANG === 'EN' && card.effect_en) return card.effect_en;
+  return card.effect_cn || card.effect;
+}
+
+// ─── Language Toggle ─────────────────────────────────────────────────────────
+
+function renderLangToggle() {
+  let toggle = document.getElementById('lang-toggle');
+  if (!toggle) {
+    toggle = document.createElement('button');
+    toggle.id = 'lang-toggle';
+    toggle.className = 'lang-toggle';
+    document.body.appendChild(toggle);
+  }
+  toggle.textContent = LANG === 'EN' ? 'CN' : 'EN';
+  toggle.onclick = () => setLang(LANG === 'EN' ? 'ZH' : 'EN');
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const COMBO_VALUES = {
@@ -15,7 +167,8 @@ const COMBO_VALUES = {
 const CARDS_PER_PLAYER = { 3: 7, 4: 9, 5: 8, 6: 8, 7: 7, 8: 7 };
 const KEEP_PER_ROUND = { 3: 6, 4: 8, 5: 7, 6: 7, 7: 6, 8: 6 };
 const MIXED_BAG_MIN = 6;
-const AI_NAMES = ['老王', '小李', '张姐', '赵哥', '阿福', '大刘', '陈叔'];
+const AI_NAMES_ZH = ['老王', '小李', '张姐', '赵哥', '阿福', '大刘', '陈叔'];
+const AI_NAMES_EN = ['Lao Wang', 'Xiao Li', 'Sister Zhang', 'Brother Zhao', 'Ah Fu', 'Big Liu', 'Uncle Chen'];
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -322,6 +475,7 @@ const state = {
   selectedCardIndex: -1,
   remainingDeck: [],
   aiNames: [],
+  aiNameIndices: [],
   comboResults: [],
 };
 
@@ -349,7 +503,11 @@ function startGame(numPlayers) {
   state.totalScores = new Array(numPlayers).fill(0);
   state.roundScores = [];
   state.strategies = [];
-  state.aiNames = shuffle(AI_NAMES).slice(0, numPlayers - 1);
+
+  // Store indices so we can look up names in either language dynamically
+  const indices = shuffle([0, 1, 2, 3, 4, 5, 6]).slice(0, numPlayers - 1);
+  state.aiNameIndices = indices;
+  state.aiNames = indices.map(i => AI_NAMES_ZH[i]);
 
   for (let i = 1; i < numPlayers; i++) {
     state.strategies.push(STRATEGY_LIST[i % STRATEGY_LIST.length]);
@@ -387,7 +545,6 @@ function confirmPick() {
   const humanChosen = state.hands[0].splice(humanIdx, 1)[0];
   const humanHasItem = state.kept[0].some(c => c.type === 'item');
   if (humanChosen.type === 'item' && humanHasItem) {
-    // Can't keep second item — put it back and pick first non-item
     state.hands[0].splice(humanIdx, 0, humanChosen);
     let altIdx = state.hands[0].findIndex(c => c.type !== 'item');
     if (altIdx === -1) altIdx = 0;
@@ -493,7 +650,9 @@ function restartGame() {
 // ─── Rendering ────────────────────────────────────────────────────────────────
 
 function getPlayerName(idx) {
-  return idx === 0 ? '你' : state.aiNames[idx - 1];
+  if (idx === 0) return t().you;
+  const nameIdx = state.aiNameIndices[idx - 1];
+  return LANG === 'EN' ? AI_NAMES_EN[nameIdx] : AI_NAMES_ZH[nameIdx];
 }
 
 function renderCard(card, options = {}) {
@@ -505,27 +664,28 @@ function renderCard(card, options = {}) {
     div.classList.add('card--item');
     div.innerHTML = `
       <div class="card__item-icon">🎴</div>
-      <div class="card__item-name">${card.name_cn}</div>
-      <div class="card__item-effect">${card.effect_cn || card.effect}</div>
+      <div class="card__item-name">${cardName(card)}</div>
+      <div class="card__item-effect">${cardEffect(card)}</div>
     `;
   } else if (card.type === 'counterfeit' && revealed) {
     div.classList.add('card--counterfeit-revealed');
     div.innerHTML = `
-      <div class="card__fake-stamp">假</div>
+      <div class="card__fake-stamp">${t().fakeStamp}</div>
       <div class="card__info">
         <div class="card__brand">${card.brand}</div>
-        <div class="card__meta">${card.origin} · ${card.format}</div>
+        <div class="card__meta">${localOrigin(card.origin)} · ${localFormat(card.format)}</div>
         <div class="card__score score--negative">-5</div>
       </div>
     `;
   } else {
     // Pack or unrevealed counterfeit — look the same
     const imgUrl = card.image_url || '';
+    const displayName = (LANG === 'EN' && card.name_en) ? card.name_en : card.brand;
     div.innerHTML = `
       ${imgUrl ? `<img class="card__img" src="${imgUrl}" loading="lazy" alt="${card.brand}" onerror="this.style.display='none'">` : ''}
       <div class="card__info">
-        <div class="card__brand">${card.brand}</div>
-        <div class="card__meta">${card.origin} · ${card.format}</div>
+        <div class="card__brand">${displayName}</div>
+        <div class="card__meta">${localOrigin(card.origin)} · ${localFormat(card.format)}</div>
         <div class="card__score">${card.type === 'counterfeit' ? card.base_score : '+' + card.base_score}</div>
       </div>
       <div class="card__rarity">${'★'.repeat(card.rarity)}</div>
@@ -546,9 +706,9 @@ function renderMenu() {
   const app = document.getElementById('app');
   app.innerHTML = `
     <div class="screen screen--menu">
-      <div class="menu__title">Cigga Go</div>
-      <div class="menu__subtitle">烟卡GO — 轮抽卡牌游戏</div>
-      <div class="menu__desc">选择人数开始游戏</div>
+      <div class="menu__title">${t().menuTitle}</div>
+      <div class="menu__subtitle">${t().menuSubtitle}</div>
+      <div class="menu__desc">${t().menuDesc}</div>
       <div class="menu__buttons" id="menu-buttons"></div>
     </div>
   `;
@@ -556,7 +716,7 @@ function renderMenu() {
   for (let n = 3; n <= 7; n++) {
     const btn = document.createElement('button');
     btn.className = 'btn btn--menu';
-    btn.textContent = `${n} 人`;
+    btn.textContent = t().xPlayers(n);
     btn.addEventListener('click', () => startGame(n));
     btns.appendChild(btn);
   }
@@ -566,23 +726,23 @@ function renderPicking() {
   const app = document.getElementById('app');
   const keepCount = state.kept[0].length;
   const maxKeep = KEEP_PER_ROUND[state.numPlayers];
-  const directionText = state.passLeft ? '← 左传' : '右传 →';
+  const directionText = state.passLeft ? t().passLeft : t().passRight;
 
   app.innerHTML = `
     <div class="screen screen--game">
       <div class="game__topbar">
-        <span>第${state.round + 1}轮</span>
-        <span>已选 ${keepCount}/${maxKeep}</span>
+        <span>${t().round(state.round + 1)}</span>
+        <span>${t().picked(keepCount, maxKeep)}</span>
         <span>${directionText}</span>
       </div>
       <div class="game__ai-bar" id="ai-bar"></div>
-      <div class="game__section-label">你的手牌 <span class="hint">（点击选牌，再点确认）</span></div>
+      <div class="game__section-label">${t().yourHand} <span class="hint">${t().handHint}</span></div>
       <div class="game__hand" id="hand-area"></div>
-      <div class="game__section-label">已收集</div>
+      <div class="game__section-label">${t().collected}</div>
       <div class="game__kept" id="kept-area"></div>
       <div class="game__actions">
         <button class="btn btn--confirm ${state.selectedCardIndex >= 0 ? '' : 'btn--disabled'}" id="confirm-btn">
-          选这张
+          ${t().pickThis}
         </button>
       </div>
     </div>
@@ -593,7 +753,7 @@ function renderPicking() {
   for (let p = 1; p < state.numPlayers; p++) {
     const aiDiv = document.createElement('div');
     aiDiv.className = 'ai-player';
-    aiDiv.innerHTML = `<span class="ai-avatar">🤖</span><span class="ai-name">${getPlayerName(p)}</span><span class="ai-count">${state.kept[p].length}张</span>`;
+    aiDiv.innerHTML = `<span class="ai-avatar">🤖</span><span class="ai-name">${getPlayerName(p)}</span><span class="ai-count">${t().cards(state.kept[p].length)}</span>`;
     aiBar.appendChild(aiDiv);
   }
 
@@ -628,8 +788,8 @@ function renderFinalTwo() {
   const app = document.getElementById('app');
   app.innerHTML = `
     <div class="screen screen--final">
-      <div class="final__title">最后抉择</div>
-      <div class="final__subtitle">选一张保留，另一张弃掉</div>
+      <div class="final__title">${t().finalChoice}</div>
+      <div class="final__subtitle">${t().finalSubtitle}</div>
       <div class="final__cards" id="final-cards"></div>
     </div>
   `;
@@ -652,33 +812,33 @@ function renderScoring() {
 
   // Brand combos
   for (const [brand, type] of Object.entries(result.brandCombos)) {
-    const label = type === 'three' ? '三条' : '对子';
+    const label = type === 'three' ? t().three : t().pair;
     const val = type === 'three' ? COMBO_VALUES.three : COMBO_VALUES.pair;
     comboHtml += `<div class="combo-item combo--brand"><span class="combo-label">${brand} ${label}</span><span class="combo-value">+${val}</span></div>`;
   }
   // Origin combos
   for (const [origin, type] of Object.entries(result.originCombos)) {
-    const label = type === 'old_friends' ? '老乡见老乡' : '同乡';
+    const label = type === 'old_friends' ? t().oldFriends : t().hometown;
     const val = type === 'old_friends' ? COMBO_VALUES.old_friends : COMBO_VALUES.hometown;
-    comboHtml += `<div class="combo-item combo--origin"><span class="combo-label">${origin} ${label}</span><span class="combo-value">+${val}</span></div>`;
+    comboHtml += `<div class="combo-item combo--origin"><span class="combo-label">${localOrigin(origin)} ${label}</span><span class="combo-value">+${val}</span></div>`;
   }
   if (result.formatClash) {
-    comboHtml += `<div class="combo-item combo--format"><span class="combo-label">粗细搭配</span><span class="combo-value">+${COMBO_VALUES.format_clash}</span></div>`;
+    comboHtml += `<div class="combo-item combo--format"><span class="combo-label">${t().formatClash}</span><span class="combo-value">+${COMBO_VALUES.format_clash}</span></div>`;
   }
   if (result.mixedBag) {
-    comboHtml += `<div class="combo-item combo--mixed"><span class="combo-label">杂货铺</span><span class="combo-value">+${COMBO_VALUES.mixed_bag}</span></div>`;
+    comboHtml += `<div class="combo-item combo--mixed"><span class="combo-label">${t().mixedBag}</span><span class="combo-value">+${COMBO_VALUES.mixed_bag}</span></div>`;
   }
   if (result.grandSlam) {
-    comboHtml += `<div class="combo-item combo--grandslam"><span class="combo-label">🎯 大满贯!</span><span class="combo-value">×2</span></div>`;
+    comboHtml += `<div class="combo-item combo--grandslam"><span class="combo-label">🎯 ${t().grandSlam}!</span><span class="combo-value">×2</span></div>`;
   }
   if (result.itemEffect) {
     const itemCard = humanCards.find(c => c.type === 'item');
-    const itemName = itemCard ? itemCard.name_cn : '道具';
+    const itemName = itemCard ? cardName(itemCard) : t().item;
     const sign = result.itemBonus >= 0 ? '+' : '';
     comboHtml += `<div class="combo-item combo--item"><span class="combo-label">🎴 ${itemName}</span><span class="combo-value">${sign}${result.itemBonus}</span></div>`;
   }
   if (result.counterfeitPenalty > 0) {
-    comboHtml += `<div class="combo-item combo--fake"><span class="combo-label">❌ 假烟!</span><span class="combo-value">-${result.counterfeitPenalty}</span></div>`;
+    comboHtml += `<div class="combo-item combo--fake"><span class="combo-label">❌ ${t().counterfeitAlert}</span><span class="combo-value">-${result.counterfeitPenalty}</span></div>`;
   }
 
   // Leaderboard
@@ -697,18 +857,18 @@ function renderScoring() {
 
   app.innerHTML = `
     <div class="screen screen--scoring">
-      <div class="scoring__title">第${state.round + 1}轮 计分</div>
+      <div class="scoring__title">${t().roundScoring(state.round + 1)}</div>
       <div class="scoring__cards" id="scoring-cards"></div>
       <div class="scoring__breakdown">
-        <div class="scoring__base">基础分: ${result.baseTotal}</div>
+        <div class="scoring__base">${t().base} ${result.baseTotal}</div>
         ${comboHtml}
-        <div class="scoring__total">本轮得分: <strong>${result.total}</strong></div>
+        <div class="scoring__total">${t().roundScore} <strong>${result.total}</strong></div>
       </div>
       <div class="scoring__leaderboard">
-        <div class="lb-header"><span class="lb-rank"></span><span class="lb-name">玩家</span><span class="lb-round">本轮</span><span class="lb-total">总分</span></div>
+        <div class="lb-header"><span class="lb-rank"></span><span class="lb-name">${t().player}</span><span class="lb-round">${t().roundLabel}</span><span class="lb-total">${t().total}</span></div>
         ${lbHtml}
       </div>
-      <button class="btn btn--next" id="next-btn">${state.round < 2 ? '下一轮' : '查看结果'}</button>
+      <button class="btn btn--next" id="next-btn">${state.round < 2 ? t().nextRound : t().seeResults}</button>
     </div>
   `;
 
@@ -750,13 +910,13 @@ function renderGameOver() {
 
   app.innerHTML = `
     <div class="screen screen--gameover">
-      <div class="go__title">${isHumanWin ? '🎉 你赢了!' : `🏆 ${winner.name} 获胜!`}</div>
-      <div class="go__subtitle">${isHumanWin ? '恭喜你，烟卡大王！' : `你的总分: ${state.totalScores[0]}`}</div>
+      <div class="go__title">${isHumanWin ? '🎉 ' + t().youWon : '🏆 ' + t().xWins(winner.name)}</div>
+      <div class="go__subtitle">${isHumanWin ? t().congrats : t().yourTotal + ' ' + state.totalScores[0]}</div>
       <div class="go__table">
-        <div class="go-header"><span class="go-rank"></span><span class="go-name">玩家</span><span class="go-rounds">R1 + R2 + R3</span><span class="go-total">总分</span></div>
+        <div class="go-header"><span class="go-rank"></span><span class="go-name">${t().player}</span><span class="go-rounds">R1 + R2 + R3</span><span class="go-total">${t().total}</span></div>
         ${tableHtml}
       </div>
-      <button class="btn btn--restart" id="restart-btn">再来一局</button>
+      <button class="btn btn--restart" id="restart-btn">${t().playAgain}</button>
     </div>
   `;
 
@@ -772,6 +932,7 @@ function renderGame() {
     case 'GAME_OVER': renderGameOver(); break;
     default: renderMenu();
   }
+  renderLangToggle();
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────

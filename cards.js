@@ -1481,60 +1481,70 @@ const CARD_DATA = {
       "type": "counterfeit",
       "brand": "中华",
       "name_cn": "假中华（硬）",
+      "name_en": "Fake Chunghwa (Hard)",
       "origin": "上海",
       "format": "常规",
       "rarity": 5,
       "base_score": -5,
       "image_url": "",
-      "flavor_cn": "包装精美但烟丝发黑，拉丝不均匀"
+      "flavor_cn": "包装精美但烟丝发黑，拉丝不均匀",
+      "flavor_en": "Fancy packaging but dark tobacco with uneven threads"
     },
     {
       "id": "fake_panda",
       "type": "counterfeit",
       "brand": "熊猫",
       "name_cn": "假熊猫（经典）",
+      "name_en": "Fake Panda (Classic)",
       "origin": "上海",
       "format": "常规",
       "rarity": 5,
       "base_score": -5,
       "image_url": "",
-      "flavor_cn": "熊猫印歪了，眼神呆滞"
+      "flavor_cn": "熊猫印歪了，眼神呆滞",
+      "flavor_en": "Panda printed crooked with a blank stare"
     },
     {
       "id": "fake_furongwang",
       "type": "counterfeit",
       "brand": "芙蓉王",
       "name_cn": "假芙蓉王（硬）",
+      "name_en": "Fake Furong Wang (Hard)",
       "origin": "湖南",
       "format": "常规",
       "rarity": 4,
       "base_score": -5,
       "image_url": "",
-      "flavor_cn": "金边掉色，封口粗糙"
+      "flavor_cn": "金边掉色，封口粗糙",
+      "flavor_en": "Gold trim fading, rough seal"
     },
     {
       "id": "fake_1916",
       "type": "counterfeit",
       "brand": "黄鹤楼",
       "name_cn": "假黄鹤楼（1916）",
+      "name_en": "Fake Yellow Crane Tower (1916)",
       "origin": "湖北",
       "format": "细支",
       "rarity": 5,
       "base_score": -5,
       "image_url": "",
-      "flavor_cn": "防伪码一刮就没，钢印模糊"
+      "flavor_cn": "防伪码一刮就没，钢印模糊",
+      "flavor_en": "Anti-counterfeit code rubs off instantly, blurry stamp"
     },
     {
       "id": "fake_nanjing95",
       "type": "counterfeit",
       "brand": "南京",
       "name_cn": "假南京（九五）",
+      "name_en": "Fake Nanjing (95)",
       "origin": "江苏",
       "format": "常规",
       "rarity": 4,
       "base_score": -5,
       "image_url": "",
-      "flavor_cn": "字体间距不对，老烟民一眼就认出来"
+      "flavor_cn": "字体间距不对，老烟民一眼就认出来",
+      "flavor_en": "Wrong font spacing, veteran smokers spot it instantly"
     }
   ],
   "item_cards": [
@@ -1542,57 +1552,73 @@ const CARD_DATA = {
       "id": "item_zippo",
       "type": "item",
       "name_cn": "Zippo 打火机",
+      "name_en": "Zippo Lighter",
       "effect": "highest_combo_plus5",
-      "effect_cn": "你本轮分数最高的 combo +5"
+      "effect_cn": "你本轮分数最高的 combo +5",
+      "effect_en": "Your highest combo this round +5"
     },
     {
       "id": "item_moutai",
       "type": "item",
       "name_cn": "茅台酒",
+      "name_en": "Moutai Liquor",
       "effect": "both_plus4",
-      "effect_cn": "选1位玩家，你俩各+4"
+      "effect_cn": "选1位玩家，你俩各+4",
+      "effect_en": "Pick a player, both of you +4"
     },
     {
       "id": "item_mahjong",
       "type": "item",
       "name_cn": "麻将桌",
+      "name_en": "Mahjong Table",
       "effect": "old_friends_plus5",
-      "effect_cn": "本轮同产地3张改为+13（原+8）"
+      "effect_cn": "本轮同产地3张改为+13（原+8）",
+      "effect_en": "Same-origin 3-card combo becomes +13 (was +8)"
     },
     {
       "id": "item_casino",
       "type": "item",
       "name_cn": "澳门赌场",
+      "name_en": "Macau Casino",
       "effect": "coin_flip",
-      "effect_cn": "抛硬币：正面+10，反面-5"
+      "effect_cn": "抛硬币：正面+10，反面-5",
+      "effect_en": "Coin flip: heads +10, tails -5"
     },
     {
       "id": "item_certificate",
       "type": "item",
       "name_cn": "假烟鉴定书",
+      "name_en": "Authentication Certificate",
       "effect": "immune_counterfeit",
-      "effect_cn": "免疫1张假烟的-5分"
+      "effect_cn": "免疫1张假烟的-5分",
+      "effect_en": "Immune to one counterfeit card's -5 penalty"
     },
     {
       "id": "item_blackmarket",
       "type": "item",
       "name_cn": "黑市通行证",
+      "name_en": "Black Market Pass",
       "effect": "retrieve_discard",
-      "effect_cn": "从弃牌堆捞回1张"
+      "effect_cn": "从弃牌堆捞回1张",
+      "effect_en": "Retrieve 1 card from the discard pile"
     },
     {
       "id": "item_smuggling",
       "type": "item",
       "name_cn": "走私渠道",
+      "name_en": "Smuggling Route",
       "effect": "swap_card",
-      "effect_cn": "与任意玩家交换1张已选的牌"
+      "effect_cn": "与任意玩家交换1张已选的牌",
+      "effect_en": "Swap 1 kept card with any player"
     },
     {
       "id": "item_fine",
       "type": "item",
       "name_cn": "控烟办罚单",
+      "name_en": "Smoking Ban Fine",
       "effect": "halve_highest_combo",
-      "effect_cn": "选1位玩家，其最高combo减半（向下取整）"
+      "effect_cn": "选1位玩家，其最高combo减半（向下取整）",
+      "effect_en": "Pick a player, halve their highest combo (round down)"
     }
   ]
 };
