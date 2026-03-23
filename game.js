@@ -49,6 +49,37 @@ const I18N = {
     formatRegular: '常规',
     formatSlim: '细支',
     formatMiddle: '中支',
+    howToPlay: '游戏规则',
+    back: '返回',
+    rulesGoal: '目标',
+    rulesGoalText: '通过3轮卡牌轮抽，收集烟盒卡并凑combo，总分最高者获胜。',
+    rulesEachRound: '每轮流程',
+    rulesStep1: '每人发一手牌',
+    rulesStep2: '选1张扣下 → 剩余传给下家',
+    rulesStep3: '所有人同时翻开选的牌',
+    rulesStep4: '重复直到剩2张 → 留1张弃1张',
+    rulesStep5: '计算本轮得分！',
+    rulesPassDir: '传牌方向交替：第1轮 ←，第2轮 →，第3轮 ←',
+    rulesBaseScores: '基础分',
+    rulesBaseScoresText: '★★ = 2分 | ★★★ = 3分 | ★★★★ = 5分 | ★★★★★ = 7分',
+    rulesCombos: 'COMBO（可叠加！）',
+    rulesPairDesc: '对子 — 同品牌 ×2 → +5',
+    rulesThreeDesc: '三条 — 同品牌 ×3 → +12',
+    rulesHometownDesc: '同乡 — 同产地 ×2 → +3',
+    rulesOldFriendsDesc: '老乡见老乡 — 同产地 ×3 → +8',
+    rulesFormatClashDesc: '粗细搭配 — 集齐3种规格（常规+细支+中支）→ +4',
+    rulesMixedBagDesc: '杂货铺 — 6张牌品牌和产地全不同 → +8',
+    rulesGrandSlamDesc: '大满贯 — 同品牌 ×3，各不同规格 → 总分 ×2 🎯',
+    rulesItems: '道具牌',
+    rulesItemsText: '像普通牌一样选取，每轮最多保留1张，各有特殊效果。',
+    rulesCounterfeit: '假烟卡',
+    rulesCounterfeitText: '看着像高分卡，实际 -5 分！你可以传给下家坑人…',
+    rulesTips: '小贴士',
+    rulesTip1: 'Combo比高分散牌强。一对★★胜过一张★★★★★',
+    rulesTip2: '盯着邻居收集什么，截他的牌！',
+    rulesTip3: '假烟别慌，牌堆里只有5张',
+    comboReference: 'Combo 速查',
+    close: '关闭',
   },
   EN: {
     aiNames: ['Lao Wang', 'Xiao Li', 'Sister Zhang', 'Brother Zhao', 'Ah Fu', 'Big Liu', 'Uncle Chen'],
@@ -94,6 +125,37 @@ const I18N = {
     formatRegular: 'Regular',
     formatSlim: 'Slim',
     formatMiddle: 'Middle',
+    howToPlay: 'How to Play',
+    back: 'Back',
+    rulesGoal: 'GOAL',
+    rulesGoalText: 'Score the most points across 3 rounds by collecting cigarette pack cards and building combos.',
+    rulesEachRound: 'EACH ROUND',
+    rulesStep1: 'Everyone gets dealt a hand of cards',
+    rulesStep2: 'Pick 1 card to keep → pass the rest to your neighbor',
+    rulesStep3: 'Everyone reveals their picks simultaneously',
+    rulesStep4: 'Repeat until 2 cards remain → keep 1, discard 1',
+    rulesStep5: 'Score your collection!',
+    rulesPassDir: 'Pass direction alternates: Round 1 ←, Round 2 →, Round 3 ←',
+    rulesBaseScores: 'CARD SCORES',
+    rulesBaseScoresText: '★★ = 2 pts | ★★★ = 3 pts | ★★★★ = 5 pts | ★★★★★ = 7 pts',
+    rulesCombos: 'COMBOS (these stack!)',
+    rulesPairDesc: 'Pair — Same brand ×2 → +5',
+    rulesThreeDesc: 'Three of a Kind — Same brand ×3 → +12',
+    rulesHometownDesc: 'Hometown — Same origin ×2 → +3',
+    rulesOldFriendsDesc: 'Old Friends — Same origin ×3 → +8',
+    rulesFormatClashDesc: 'Format Clash — All 3 formats (Regular+Slim+Middle) → +4',
+    rulesMixedBagDesc: 'Mixed Bag — 6 cards, all different brand & origin → +8',
+    rulesGrandSlamDesc: 'Grand Slam — Same brand ×3, each different format → TOTAL ×2 🎯',
+    rulesItems: 'ITEM CARDS',
+    rulesItemsText: 'Pick one like any other card. Max 1 per round. Each has a unique ability.',
+    rulesCounterfeit: 'COUNTERFEIT CARDS',
+    rulesCounterfeitText: 'Look real but cost you -5 points! Pass them to your rivals...',
+    rulesTips: 'TIPS',
+    rulesTip1: 'Combos > high base scores. A pair of ★★ beats a lone ★★★★★',
+    rulesTip2: 'Watch what your neighbors collect — steal what they need!',
+    rulesTip3: "Don't panic over counterfeits — they're rare",
+    comboReference: 'Combo Reference',
+    close: 'Close',
   }
 };
 
@@ -720,6 +782,16 @@ function renderMenu() {
     btn.addEventListener('click', () => startGame(n));
     btns.appendChild(btn);
   }
+
+  // How to Play button
+  const rulesBtn = document.createElement('button');
+  rulesBtn.className = 'btn btn--menu btn--rules-menu';
+  rulesBtn.textContent = t().howToPlay;
+  rulesBtn.addEventListener('click', () => {
+    state.phase = 'RULES';
+    renderGame();
+  });
+  btns.parentElement.appendChild(rulesBtn);
 }
 
 function renderPicking() {
@@ -734,6 +806,7 @@ function renderPicking() {
         <span>${t().round(state.round + 1)}</span>
         <span>${t().picked(keepCount, maxKeep)}</span>
         <span>${directionText}</span>
+        <button class="btn--help" id="help-btn">?</button>
       </div>
       <div class="game__ai-bar" id="ai-bar"></div>
       <div class="game__section-label">${t().yourHand} <span class="hint">${t().handHint}</span></div>
@@ -782,6 +855,9 @@ function renderPicking() {
   document.getElementById('confirm-btn').addEventListener('click', () => {
     if (state.selectedCardIndex >= 0) confirmPick();
   });
+
+  // Help button
+  document.getElementById('help-btn').addEventListener('click', renderComboReference);
 }
 
 function renderFinalTwo() {
@@ -923,9 +999,116 @@ function renderGameOver() {
   document.getElementById('restart-btn').addEventListener('click', restartGame);
 }
 
+function renderRules() {
+  const app = document.getElementById('app');
+  const s = t();
+  app.innerHTML = `
+    <div class="screen screen--rules">
+      <div class="rules__title">${s.howToPlay}</div>
+
+      <div class="rules__section">
+        <h3>🎯 ${s.rulesGoal}</h3>
+        <p>${s.rulesGoalText}</p>
+      </div>
+
+      <div class="rules__section">
+        <h3>🃏 ${s.rulesEachRound}</h3>
+        <ol>
+          <li>${s.rulesStep1}</li>
+          <li>${s.rulesStep2}</li>
+          <li>${s.rulesStep3}</li>
+          <li>${s.rulesStep4}</li>
+          <li>${s.rulesStep5}</li>
+        </ol>
+        <p class="rules__pass-dir">↔️ ${s.rulesPassDir}</p>
+      </div>
+
+      <div class="rules__section">
+        <h3>⭐ ${s.rulesBaseScores}</h3>
+        <p>${s.rulesBaseScoresText}</p>
+      </div>
+
+      <div class="rules__section">
+        <h3>🔥 ${s.rulesCombos}</h3>
+        <table class="rules__combo-table">
+          <tr><td>🎯</td><td>${s.rulesPairDesc}</td></tr>
+          <tr><td>🎯</td><td>${s.rulesThreeDesc}</td></tr>
+          <tr><td>📍</td><td>${s.rulesHometownDesc}</td></tr>
+          <tr><td>📍</td><td>${s.rulesOldFriendsDesc}</td></tr>
+          <tr><td>📏</td><td>${s.rulesFormatClashDesc}</td></tr>
+          <tr><td>🎲</td><td>${s.rulesMixedBagDesc}</td></tr>
+          <tr><td>🏆</td><td>${s.rulesGrandSlamDesc}</td></tr>
+        </table>
+      </div>
+
+      <div class="rules__section">
+        <h3>🎴 ${s.rulesItems}</h3>
+        <p>${s.rulesItemsText}</p>
+      </div>
+
+      <div class="rules__section">
+        <h3>❌ ${s.rulesCounterfeit}</h3>
+        <p>${s.rulesCounterfeitText} 😈</p>
+      </div>
+
+      <div class="rules__section">
+        <h3>💡 ${s.rulesTips}</h3>
+        <ul>
+          <li>${s.rulesTip1}</li>
+          <li>${s.rulesTip2}</li>
+          <li>${s.rulesTip3}</li>
+        </ul>
+      </div>
+
+      <button class="btn btn--confirm btn--back" id="back-btn">${s.back}</button>
+    </div>
+  `;
+
+  document.getElementById('back-btn').addEventListener('click', () => {
+    state.phase = 'MENU';
+    renderGame();
+  });
+}
+
+function renderComboReference() {
+  // Remove existing overlay if any
+  const existing = document.getElementById('combo-overlay');
+  if (existing) { existing.remove(); return; }
+
+  const s = t();
+  const overlay = document.createElement('div');
+  overlay.id = 'combo-overlay';
+  overlay.className = 'combo-overlay';
+  overlay.innerHTML = `
+    <div class="combo-popup">
+      <div class="combo-popup__header">
+        <span class="combo-popup__title">🔥 ${s.comboReference}</span>
+        <button class="combo-popup__close" id="combo-close">${s.close}</button>
+      </div>
+      <table class="rules__combo-table">
+        <tr><td>🎯</td><td>${s.rulesPairDesc}</td></tr>
+        <tr><td>🎯</td><td>${s.rulesThreeDesc}</td></tr>
+        <tr><td>📍</td><td>${s.rulesHometownDesc}</td></tr>
+        <tr><td>📍</td><td>${s.rulesOldFriendsDesc}</td></tr>
+        <tr><td>📏</td><td>${s.rulesFormatClashDesc}</td></tr>
+        <tr><td>🎲</td><td>${s.rulesMixedBagDesc}</td></tr>
+        <tr><td>🏆</td><td>${s.rulesGrandSlamDesc}</td></tr>
+      </table>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('combo-close').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
 function renderGame() {
   switch (state.phase) {
     case 'MENU': renderMenu(); break;
+    case 'RULES': renderRules(); break;
     case 'PICKING': renderPicking(); break;
     case 'FINAL_TWO': renderFinalTwo(); break;
     case 'SCORING': renderScoring(); break;

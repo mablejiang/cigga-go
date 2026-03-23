@@ -575,6 +575,175 @@ body {
   border-color: var(--gold);
 }
 
+/* ─── Rules Screen ─────────────────────────────────────────────────────── */
+
+.screen--rules {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow-y: auto;
+  max-height: 100vh;
+  gap: 0;
+}
+
+.rules__title {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--gold);
+}
+
+.rules__section {
+  margin-bottom: 16px;
+  background: var(--bg-light);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.rules__section h3 {
+  font-size: 16px;
+  margin-bottom: 6px;
+  color: var(--gold-light);
+}
+
+.rules__section p,
+.rules__section li {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.rules__section ol,
+.rules__section ul {
+  padding-left: 20px;
+}
+
+.rules__section ol li,
+.rules__section ul li {
+  margin-bottom: 2px;
+}
+
+.rules__pass-dir {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.rules__combo-table {
+  width: 100%;
+  font-size: 13px;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+
+.rules__combo-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  color: var(--text);
+}
+
+.rules__combo-table td:first-child {
+  width: 28px;
+  text-align: center;
+}
+
+.btn--rules-menu {
+  width: 100%;
+  margin-top: 8px;
+  border-style: dashed;
+}
+
+.btn--back {
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+/* ─── Help Button (in-game) ────────────────────────────────────────────── */
+
+.btn--help {
+  background: none;
+  border: 2px solid var(--gold);
+  color: var(--gold);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn--help:hover,
+.btn--help:active {
+  background: var(--gold);
+  color: var(--bg);
+}
+
+/* ─── Combo Reference Overlay ──────────────────────────────────────────── */
+
+.combo-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.combo-popup {
+  background: var(--bg-light);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 16px;
+  max-width: 400px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.combo-popup__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.combo-popup__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.combo-popup__close {
+  background: none;
+  border: 1px solid var(--text-dim);
+  color: var(--text-dim);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.combo-popup__close:hover,
+.combo-popup__close:active {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
 /* ─── Responsive ────────────────────────────────────────────────────────── */
 
 @media (min-width: 480px) {
