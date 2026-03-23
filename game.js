@@ -798,7 +798,17 @@ function renderCard(card, options = {}) {
   if (clickable && index >= 0) {
     div.addEventListener('click', () => {
       state.selectedCardIndex = index;
-      renderGame();
+      // Update selection visually without full re-render
+      const handArea = document.getElementById('hand-area');
+      if (handArea) {
+        handArea.querySelectorAll('.card').forEach((el, i) => {
+          el.classList.toggle('card--selected', i === index);
+        });
+        const confirmBtn = document.getElementById('confirm-btn');
+        if (confirmBtn) confirmBtn.classList.remove('btn--disabled');
+      } else {
+        renderGame();
+      }
     });
   }
 
@@ -1039,39 +1049,56 @@ function renderScoring() {
     }
   }
 
-  // Staggered combo reveal
+  // Staggered combo reveal — NO toasts during combo list (they overlap and duplicate)
   const comboArea = document.getElementById('combo-reveal-area');
   const totalEl = document.getElementById('scoring-total');
   const counterEl = document.getElementById('score-counter');
 
-  const baseDelay = 500; // after base score fade in
-  comboItems.forEach((item, idx) => {
+  const baseDelay = 600;
+  const comboInterval = 500;
+  let grandSlamIdx = -1;
+
+  // First pass: show all non-Grand-Slam combos sequentially
+  const regularCombos = comboItems.filter(item => !item.isGrandSlam);
+  const hasGrandSlam = comboItems.some(item => item.isGrandSlam);
+
+  regularCombos.forEach((item, idx) => {
     setTimeout(() => {
       const wrapper = document.createElement('div');
       wrapper.innerHTML = item.html;
       const el = wrapper.firstElementChild;
       el.style.animationDelay = '0ms';
       comboArea.appendChild(el);
-
-      // Show toast for combos
-      if (item.toastMsg) {
-        showToast(item.toastMsg, item.toastType || 'combo');
-      }
-
-      // Grand Slam celebration
-      if (item.isGrandSlam) {
-        triggerGrandSlamCelebration();
-      }
-    }, baseDelay + idx * 400);
+    }, baseDelay + idx * comboInterval);
   });
 
-  // After all combos revealed, show total with counter animation
-  const totalDelay = baseDelay + comboItems.length * 400 + 200;
+  // After regular combos: show total (pre-multiplier if Grand Slam)
+  const preTotal = hasGrandSlam ? Math.round(result.total / 2) : result.total;
+  const totalDelay = baseDelay + regularCombos.length * comboInterval + 300;
+
   setTimeout(() => {
     totalEl.style.opacity = '1';
     totalEl.classList.add('scoring__total--entering');
-    animateCounter(counterEl, result.total, 800);
+    animateCounter(counterEl, preTotal, 600);
   }, totalDelay);
+
+  // If Grand Slam: after showing pre-total, trigger the full celebration sequence
+  if (hasGrandSlam) {
+    const slamDelay = totalDelay + 900; // let pre-total finish counting
+    setTimeout(() => {
+      triggerGrandSlamCelebration(() => {
+        // After celebration ends, double the counter
+        animateCounter(counterEl, result.total, 1000);
+        // Add Grand Slam line to combo list
+        const gsItem = comboItems.find(item => item.isGrandSlam);
+        if (gsItem) {
+          const wrapper = document.createElement('div');
+          wrapper.innerHTML = gsItem.html;
+          comboArea.appendChild(wrapper.firstElementChild);
+        }
+      });
+    }, slamDelay);
+  }
 
   document.getElementById('next-btn').addEventListener('click', nextRound);
 }
@@ -1347,40 +1374,84 @@ function setupCardTooltip(cardEl, card) {
 
 // ─── Grand Slam Celebration ──────────────────────────────────────────────────
 
-function triggerGrandSlamCelebration() {
-  // Gold flash overlay
-  const overlay = document.createElement('div');
-  overlay.className = 'grandslam-overlay';
-  document.body.appendChild(overlay);
-  setTimeout(() => overlay.remove(), 600);
+function triggerGrandSlamCelebration(onComplete) {
+  // Phase 1: Screen goes dark (200ms)
+  const blackout = document.createElement('div');
+  blackout.className = 'gs-blackout';
+  document.body.appendChild(blackout);
 
-  // Centered text
-  const text = document.createElement('div');
-  text.className = 'grandslam-text';
-  text.textContent = LANG === 'ZH' ? '大满贯 ×2' : 'GRAND SLAM ×2';
-  document.body.appendChild(text);
-  setTimeout(() => text.remove(), 1500);
+  setTimeout(() => {
+    // Phase 2: Gold explosion burst from center (400ms)
+    const burst = document.createElement('div');
+    burst.className = 'gs-burst';
+    document.body.appendChild(burst);
 
-  // Particles
-  const particles = document.createElement('div');
-  particles.className = 'grandslam-particles';
-  document.body.appendChild(particles);
+    // Phase 3: Giant text slams in (600ms)
+    setTimeout(() => {
+      const textContainer = document.createElement('div');
+      textContainer.className = 'gs-text-container';
 
-  for (let i = 0; i < 16; i++) {
-    const p = document.createElement('div');
-    p.className = 'grandslam-particle';
-    const angle = (i / 16) * Math.PI * 2;
-    const dist = 60 + Math.random() * 80;
-    const x = Math.cos(angle) * dist;
-    const y = Math.sin(angle) * dist;
-    p.style.setProperty('--particle-end', `translate(${x}px, ${y}px)`);
-    p.style.animationDelay = `${i * 30}ms`;
-    particles.appendChild(p);
-  }
+      const line1 = document.createElement('div');
+      line1.className = 'gs-text-line1';
+      line1.textContent = LANG === 'ZH' ? '大 满 贯' : 'GRAND SLAM';
 
-  setTimeout(() => particles.remove(), 1500);
+      const line2 = document.createElement('div');
+      line2.className = 'gs-text-line2';
+      line2.textContent = '× 2';
 
-  showToast(LANG === 'ZH' ? '大满贯! 总分 ×2!' : 'Grand Slam! Total ×2!', 'celebration');
+      textContainer.appendChild(line1);
+      textContainer.appendChild(line2);
+      document.body.appendChild(textContainer);
+
+      // Phase 4: Particle shower (fire immediately with text)
+      const particleContainer = document.createElement('div');
+      particleContainer.className = 'gs-particles';
+      document.body.appendChild(particleContainer);
+
+      for (let i = 0; i < 60; i++) {
+        const p = document.createElement('div');
+        p.className = 'gs-particle';
+        const hue = 35 + Math.random() * 25; // gold to amber range
+        const size = 3 + Math.random() * 6;
+        const startX = Math.random() * 100;
+        const drift = (Math.random() - 0.5) * 40;
+        const fallDuration = 1.5 + Math.random() * 1.5;
+        const delay = Math.random() * 0.8;
+        p.style.cssText = `
+          left: ${startX}%;
+          width: ${size}px; height: ${size}px;
+          background: hsl(${hue}, 100%, ${55 + Math.random() * 30}%);
+          --drift: ${drift}px;
+          animation: gs-fall ${fallDuration}s ease-in ${delay}s both;
+        `;
+        particleContainer.appendChild(p);
+      }
+
+      // Screen shake
+      const app = document.getElementById('app');
+      if (app && app.firstElementChild) {
+        app.firstElementChild.classList.add('screen--shake-heavy');
+        setTimeout(() => app.firstElementChild.classList.remove('screen--shake-heavy'), 500);
+      }
+
+      // Phase 5: Cleanup and callback (after 2.5s total display)
+      setTimeout(() => {
+        blackout.classList.add('gs-blackout--fade');
+        burst.classList.add('gs-burst--fade');
+        textContainer.classList.add('gs-text--fade');
+        particleContainer.classList.add('gs-particles--fade');
+
+        setTimeout(() => {
+          blackout.remove();
+          burst.remove();
+          textContainer.remove();
+          particleContainer.remove();
+          if (onComplete) onComplete();
+        }, 500);
+      }, 2000);
+
+    }, 300);
+  }, 200);
 }
 
 // ─── Counterfeit Reveal Animation ────────────────────────────────────────────
