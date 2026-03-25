@@ -293,7 +293,7 @@ function cardEffect(card) {
 
 const AI_SPEECH = {
   ZH: {
-    draft: ['嘿嘿...', '这张不错', '让我想想...', '送你一条好烟~', '这手牌不行啊', '有意思...', '我全都要！', '难选啊...'],
+    draft: ['嘿嘿...', '这张不错', '让我想想...', '送你一条好烟~', '这手牌不行啊', '有意思...', '我全都要！', '难选啊...', '这个留着', '不错不错', '哈哈有了', '纠结...', '完美！', '凑不到啊...', '再来一张好的'],
     discardReact: ['你居然扔了这个？！', '这牌你不要我要啊', '可惜了...', '明智的选择'],
     counterfeitReact: ['谁给我传的假烟！？', '我就知道不对劲！', '又是假中华...', '被坑了！'],
     scoreReact: ['不错不错', '就这？', '厉害！', '运气好而已', '下轮翻盘！'],
@@ -302,7 +302,7 @@ const AI_SPEECH = {
     wronglyAccused: '冤枉好人了...',
   },
   EN: {
-    draft: ['Hmm...', 'Nice one', 'Let me think...', "Here's a treat~", 'Slim pickings...', 'Interesting...', 'I want them all!', 'Tough choice...'],
+    draft: ['Hmm...', 'Nice one!', 'Let me think...', "Here's a treat~", 'Slim pickings...', 'Interesting...', 'I want them all!', 'Tough choice...', 'Keeping this one', 'Not bad', 'Haha, got it!', 'So torn...', 'Perfect!', "Can't find what I need...", 'Need a good one'],
     discardReact: ['You tossed THAT?!', "I would've kept that!", 'What a waste...', 'Smart move'],
     counterfeitReact: ['Who passed me this fake?!', 'I knew something was off!', 'Another fake...', 'Got played!'],
     scoreReact: ['Not bad', "That's it?", 'Impressive!', 'Just lucky', "I'll get you next round!"],
@@ -1079,7 +1079,24 @@ function showCoinFlip(isWin) {
 // ─── ASYNC STATE MACHINE — GAME FLOW ─────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
+function showFloatingHelp() {
+  let helpBtn = document.getElementById('help-float');
+  if (helpBtn) return;
+  helpBtn = document.createElement('button');
+  helpBtn.id = 'help-float';
+  helpBtn.className = 'help-float';
+  helpBtn.textContent = '?';
+  helpBtn.addEventListener('click', renderComboReference);
+  document.body.appendChild(helpBtn);
+}
+
+function hideFloatingHelp() {
+  const helpBtn = document.getElementById('help-float');
+  if (helpBtn) helpBtn.remove();
+}
+
 async function startGameFlow(numPlayers) {
+  showFloatingHelp();
   state.numPlayers = numPlayers;
   state.round = 0;
   state.totalScores = new Array(numPlayers).fill(0);
@@ -1211,6 +1228,101 @@ async function showRoundSplash() {
   await sleep(2000);
 }
 
+// ─── AI Pick & Pass Animations ──────────────────────────────────────────────
+
+async function showAIPicks() {
+  for (let p = 1; p < state.numPlayers; p++) {
+    await sleep(400);
+
+    const aiEl = document.querySelector(`.ai-player[data-player="${p}"]`);
+    if (!aiEl) continue;
+
+    // Update status to "Picking..."
+    const statusEl = document.getElementById(`ai-status-${p}`);
+    if (statusEl) {
+      statusEl.textContent = LANG === 'ZH' ? '选牌中...' : 'Picking...';
+      statusEl.classList.add('ai-player__status--active');
+    }
+
+    // Create card-back element at center of viewport
+    const cardBack = document.createElement('div');
+    cardBack.className = 'card-back ai-pick-card';
+    cardBack.textContent = 'Cigga Go';
+    cardBack.style.left = `${window.innerWidth / 2 - 52}px`;
+    cardBack.style.top = `${window.innerHeight / 2}px`;
+    cardBack.style.opacity = '0';
+    cardBack.style.transform = 'scale(0.5)';
+    document.body.appendChild(cardBack);
+
+    // Trigger reflow then animate
+    cardBack.offsetHeight;
+    cardBack.style.opacity = '1';
+    cardBack.style.transform = 'scale(1)';
+
+    await sleep(200);
+
+    // Fly the card-back to AI avatar area
+    const aiRect = aiEl.getBoundingClientRect();
+    cardBack.style.left = `${aiRect.left + aiRect.width / 2 - 20}px`;
+    cardBack.style.top = `${aiRect.top}px`;
+    cardBack.style.transform = 'scale(0.3)';
+    cardBack.style.opacity = '0.5';
+
+    await sleep(500);
+    cardBack.remove();
+
+    // Bounce the card count
+    const countEl = document.getElementById(`ai-count-${p}`);
+    if (countEl) {
+      countEl.textContent = t().cards(state.kept[p].length);
+      countEl.classList.remove('ai-count--bounce');
+      countEl.offsetHeight;
+      countEl.classList.add('ai-count--bounce');
+    }
+
+    // Update status
+    if (statusEl) {
+      statusEl.textContent = LANG === 'ZH' ? '选好了!' : 'Picked!';
+    }
+
+    // Optional speech bubble (50% chance)
+    if (Math.random() < 0.5) {
+      const speech = AI_SPEECH[LANG];
+      showBubble(p, pick(speech.draft), 1500);
+    }
+  }
+}
+
+async function showPassAnimation() {
+  const dirLabel = state.passLeft
+    ? (LANG === 'ZH' ? '传牌中... ←' : 'Passing cards... ←')
+    : (LANG === 'ZH' ? '传牌中... →' : 'Passing cards... →');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'pass-overlay';
+  overlay.innerHTML = `
+    <div style="text-align:center">
+      <div>${dirLabel}</div>
+      <div class="pass-overlay__cards">
+        <div class="card-back" style="width:40px;height:56px;font-size:6px">Cigga Go</div>
+        <div class="card-back" style="width:40px;height:56px;font-size:6px">Cigga Go</div>
+        <div class="card-back" style="width:40px;height:56px;font-size:6px">Cigga Go</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  await sleep(1200);
+  overlay.remove();
+}
+
+function showDraftNotification(text) {
+  const notif = document.createElement('div');
+  notif.className = 'draft-notification';
+  notif.textContent = text;
+  document.body.appendChild(notif);
+  setTimeout(() => notif.remove(), 1600);
+}
+
 // ─── Phase 4: DRAFT ──────────────────────────────────────────────────────────
 
 async function draftPhase() {
@@ -1254,7 +1366,6 @@ async function draftPick() {
           <span>${t().round(state.round + 1)}</span>
           <span>${t().picked(keepCount, maxKeep)}</span>
           <span>${directionText}</span>
-          <button class="btn--help" id="help-btn">?</button>
         </div>
         <div class="game__ai-bar" id="ai-bar"></div>
         <div class="game__section-label">${t().yourHand} <span class="hint">${t().handHint}</span></div>
@@ -1278,7 +1389,8 @@ async function draftPick() {
       const aiDiv = document.createElement('div');
       aiDiv.className = 'ai-player';
       aiDiv.setAttribute('data-player', p);
-      aiDiv.innerHTML = `<span class="ai-avatar">${getPlayerAvatar(p)}</span><span class="ai-name">${getPlayerName(p)}</span><span class="ai-count">${t().cards(state.kept[p].length)}</span>`;
+      aiDiv.setAttribute('data-color', (p - 1) % 6);
+      aiDiv.innerHTML = `<span class="ai-avatar">${getPlayerAvatar(p)}</span><span class="ai-name">${getPlayerName(p)}</span><span class="ai-count" id="ai-count-${p}">${t().cards(state.kept[p].length)}</span><span class="ai-player__status" id="ai-status-${p}"></span>`;
       aiBar.appendChild(aiDiv);
     }
 
@@ -1288,6 +1400,8 @@ async function draftPick() {
       const delay = randInt(500, 1500);
       const aiEl = document.querySelector(`.ai-player[data-player="${p}"]`);
       if (aiEl) aiEl.classList.add('ai-player--thinking');
+      const statusEl = document.getElementById(`ai-status-${p}`);
+      if (statusEl) { statusEl.textContent = LANG === 'ZH' ? '想想...' : 'Thinking...'; statusEl.classList.add('ai-player__status--active'); }
       showTypingBubble(p);
 
       aiThinkPromises.push(sleep(delay).then(() => {
@@ -1296,8 +1410,9 @@ async function draftPick() {
           aiEl.classList.remove('ai-player--thinking');
           aiEl.classList.add('ai-player--done');
         }
-        // Random speech ~30% chance
-        if (Math.random() < 0.3) {
+        if (statusEl) { statusEl.textContent = LANG === 'ZH' ? '选好了!' : 'Picked!'; }
+        // Random speech ~50% chance
+        if (Math.random() < 0.5) {
           const speech = AI_SPEECH[LANG];
           showBubble(p, pick(speech.draft), 2000);
         } else {
@@ -1345,9 +1460,6 @@ async function draftPick() {
       keptArea.appendChild(keptEl);
     }
 
-    // Help button
-    document.getElementById('help-btn').addEventListener('click', renderComboReference);
-
     // Confirm button
     document.getElementById('confirm-btn').addEventListener('click', async () => {
       if (state.selectedCardIndex < 0) return;
@@ -1374,7 +1486,7 @@ async function draftPick() {
       // Wait for all AI thinking to finish
       await Promise.all(aiThinkPromises);
 
-      // AI picks
+      // AI picks (logic)
       for (let p = 1; p < state.numPlayers; p++) {
         const strategy = state.strategies[p - 1];
         let idx = strategy.pickCard(state.hands[p], state.kept[p]);
@@ -1393,6 +1505,16 @@ async function draftPick() {
           state.kept[p].push(chosen);
         }
       }
+
+      // Show AI pick animations visually
+      await showAIPicks();
+
+      // Flash draft notification
+      showDraftNotification(LANG === 'ZH' ? '所有人都选好了！传牌中...' : 'Everyone picked! Passing cards...');
+      await sleep(600);
+
+      // Show pass animation
+      await showPassAnimation();
 
       // Pass hands
       const newHands = new Array(state.numPlayers);
@@ -1820,23 +1942,26 @@ async function animateScoring() {
   const result = state.comboResults[0];
   const humanCards = state.kept[0];
 
-  // Build combo items
+  // Build combo items with matching card references
   const comboItems = [];
   for (const [brand, type] of Object.entries(result.brandCombos)) {
     const val = type === 'three' ? COMBO_VALUES.three : COMBO_VALUES.pair;
     const label = type === 'three' ? t().three : t().pair;
-    comboItems.push({ type: 'brand', label: `${brand} ${label}`, value: val, glowClass: 'card--glow-gold', matchFn: c => c.brand === brand });
+    const matchingCards = humanCards.filter(c => c.type === 'pack' && c.brand === brand);
+    comboItems.push({ type: 'brand', label: `${brand} ${label}`, value: val, glowClass: 'card--glow-gold', matchFn: c => c.brand === brand, matchingCards });
   }
   for (const [origin, type] of Object.entries(result.originCombos)) {
     const val = type === 'old_friends' ? COMBO_VALUES.old_friends : COMBO_VALUES.hometown;
     const label = type === 'old_friends' ? t().oldFriends : t().hometown;
-    comboItems.push({ type: 'origin', label: `${localOrigin(origin)} ${label}`, value: val, glowClass: 'card--glow-blue', matchFn: c => c.origin === origin });
+    const matchingCards = humanCards.filter(c => c.type === 'pack' && c.origin === origin);
+    comboItems.push({ type: 'origin', label: `${localOrigin(origin)} ${label}`, value: val, glowClass: 'card--glow-blue', matchFn: c => c.origin === origin, matchingCards });
   }
   if (result.formatClash) {
-    comboItems.push({ type: 'format', label: t().formatClash, value: COMBO_VALUES.format_clash, glowClass: 'card--glow-green', matchFn: () => true });
+    const matchingCards = humanCards.filter(c => c.type === 'pack');
+    comboItems.push({ type: 'format', label: t().formatClash, value: COMBO_VALUES.format_clash, glowClass: 'card--glow-green', matchFn: () => true, matchingCards: matchingCards.slice(0, 3) });
   }
   if (result.mixedBag) {
-    comboItems.push({ type: 'mixed', label: t().mixedBag, value: COMBO_VALUES.mixed_bag, glowClass: 'card--glow-purple', matchFn: () => true });
+    comboItems.push({ type: 'mixed', label: t().mixedBag, value: COMBO_VALUES.mixed_bag, glowClass: 'card--glow-purple', matchFn: () => true, matchingCards: humanCards.filter(c => c.type === 'pack').slice(0, 3) });
   }
 
   // Build score bar data
@@ -1904,10 +2029,19 @@ async function animateScoring() {
       }
     }
 
-    // Show combo line
+    // Show combo line with card thumbnails
     const comboLine = document.createElement('div');
     comboLine.className = `combo-item combo--${combo.type} combo-item--entering`;
-    comboLine.innerHTML = `<span class="combo-label">${combo.label}</span><span class="combo-value">+${combo.value}</span>`;
+    let thumbsHtml = '';
+    if (combo.matchingCards && combo.matchingCards.length > 0) {
+      thumbsHtml = '<span class="combo-thumbnails">' + combo.matchingCards.map(c => {
+        if (c.image_url) {
+          return `<img class="combo-thumb" src="${c.image_url}" alt="${c.brand}" onerror="this.style.display='none'">`;
+        }
+        return `<span class="combo-thumb--placeholder">${c.brand ? c.brand.charAt(0) : '?'}</span>`;
+      }).join('') + '</span>';
+    }
+    comboLine.innerHTML = `<span class="combo-label">${combo.label}</span>${thumbsHtml}<span class="combo-value">+${combo.value}</span>`;
     comboArea.appendChild(comboLine);
 
     await sleep(200);
@@ -2291,6 +2425,7 @@ async function gameOverPhase() {
       state.grabResults = [];
       state.inspections = [];
       state.roundComboResults = [];
+      hideFloatingHelp();
       renderMenu();
       renderLangToggle();
       resolve();
